@@ -1,0 +1,17 @@
+db:
+  # Connection type: 'sqlite' (local file) or 'mysql' (external database)
+  type: sqlite
+
+  # Settings for local SQLite database
+  sqlite:
+    # Folder path where MCBackpackSQLite will create mcbackpack.db
+    path: plugins/MCBackpack
+  
+  # Settings for external MySQL/MariaDB database
+  mysql:
+    host: localhost
+    port: "3306"
+    database: mcbackpack
+    user: root
+    password: mcbackpack
+    ssl: "false"

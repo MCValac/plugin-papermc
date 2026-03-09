@@ -1,0 +1,15 @@
+name: ${name}
+version: ${version}
+main: io.github.mcvalac.mcbackpack.papermc.MCBackpackPlugin
+author: MCValac
+description: PaperMC platform plugin for the MCBackpack ecosystem.
+api-version: 1.20
+
+commands:
+  mcbackpack:
+    description: Manage MCExtension lifecycle (list, reload, reloadall, disable)
+
+permissions:
+  mcextension.admin:
+    description: Access MCBackpack extension management commands
+    default: op

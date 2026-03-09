@@ -1,0 +1,104 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id 'io.github.mcengine.gradle.plugin.version-calculator' version '1.0.2'
+    id 'io.github.mcengine.gradle.plugin.plugin-export' version '1.0.2'
+    id 'com.gradleup.shadow' version '9.3.2'
+}
+
+group = project.property('project-group')
+
+def artifactIdValue = project.findProperty('project-artifact-id') ?: 'mcbackpack-papermc'
+def artifactName = project.findProperty('project-artifact-name') ?: 'MCBackpack PaperMC'
+def artifactDescription = project.findProperty('project-artifact-description') ?: "PaperMC platform plugin for the MCBackpack ecosystem."
+def gitOwner = project.findProperty('git-org-name') ?: 'MCValac'
+def gitRepo = project.findProperty('git-org-repository') ?: 'plugin-plugin'
+def gitUrl = "https://github.com/${gitOwner}/${gitRepo}"
+
+println "[${project.name}] Final Version (via Plugin): ${project.version}"
+
+repositories {
+    def ghRepo = io.github.mcengine.gradle.plugin.GithubRepositories.githubPackagesRepo(repositories)
+
+    mavenCentral()
+    maven {
+        name = 'papermc'
+        url = uri('https://repo.papermc.io/repository/maven-public/')
+    }
+    ghRepo('MCValac', 'plugin-api')
+    ghRepo('MCValac', 'plugin-common')
+    ghRepo('MCEngine', 'mcextension')
+}
+
+dependencies {
+    implementation 'com.zaxxer:HikariCP:7.0.2'
+    compileOnly 'org.xerial:sqlite-jdbc:3.51.2.0'
+    compileOnly 'io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT'
+    implementation 'io.github.mcengine:mcutil:2026.0.3-2'
+    implementation "io.github.mcvalac:mcbackpack-api:2026.0.3-1"
+    implementation "io.github.mcvalac:mcbackpack-common:2026.0.3-1"
+    implementation 'io.github.mcengine:mcextension:2026.0.4-1'
+}
+
+shadowJar {
+    relocate 'io.github.mcengine', 'io.github.mcvalac'
+    relocate 'com.zaxxer', 'io.github.mcvalac'
+    archiveBaseName.set('MCBackpackPaperMC')
+    archiveClassifier.set('')
+}
+
+tasks.withType(Jar).configureEach {
+    archiveBaseName.set('MCBackpackPaperMC')
+    if (name == 'jar') {
+        enabled = false
+    }
+}
+
+processResources {
+    filesMatching('plugin.yml') {
+        expand(
+                version: project.version,
+                name: project.findProperty('plugin-name') ?: 'MCBackpack'
+        )
+    }
+}
+
+publishing {
+    publications {
+        create('mavenJava', MavenPublication) {
+            artifactId = artifactIdValue 
+            artifact(tasks.named('shadowJar')) { classifier = '' }
+
+            pom {
+                name = artifactName
+                description = artifactDescription
+                url = gitUrl
+
+                developers {
+                    developer {
+                        id = 'jetsadawijit'
+                        url = 'https://jetsadawijit.github.io'
+                    }
+                }
+
+                scm {
+                    connection = "scm:git:git://github.com/${gitOwner}/${gitRepo}.git"
+                    developerConnection = "scm:git:ssh://github.com/${gitOwner}/${gitRepo}.git"
+                    url = gitUrl
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = 'GitHubPackages'
+            url = uri("https://maven.pkg.github.com/${gitOwner}/${gitRepo}")
+
+            credentials {
+                username = System.getenv('GITHUB_ACTOR') ?: System.getenv('AGENT_NAME') ?: System.getenv('USER_GITHUB_NAME')
+                password = System.getenv('GITHUB_TOKEN') ?: System.getenv('AGENT_TOKEN') ?: System.getenv('USER_GITHUB_TOKEN')
+            }
+        }
+    }
+}
