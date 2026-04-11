@@ -37,7 +37,7 @@ dependencies {
     implementation 'io.github.mcengine:mcutil:2026.0.3-2'
     implementation "io.github.mcvalac:mcbackpack-api:2026.0.3-1"
     implementation "io.github.mcvalac:mcbackpack-common:2026.0.3-1"
-    implementation 'io.github.mcengine:mcextension:2026.0.4-1'
+    implementation 'io.github.mcengine:mcextension:2026.0.4-4'
 }
 
 shadowJar {
