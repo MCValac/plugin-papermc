@@ -40,7 +40,7 @@ public final class MCBackpackPlugin extends JavaPlugin {
 
         new MCBackpackProvider(database);
 
-        extensionManager = new MCExtensionManager();
+        extensionManager = new MCExtensionManager(-1);
         extensionManager.loadAllExtensions(this, asyncExecutor);
         registerExtensionCommand();
         checkForUpdates();
