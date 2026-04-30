@@ -66,6 +66,7 @@ processResources {
 publishing {
     publications {
         create('mavenJava', MavenPublication) {
+            artifactId = artifactIdValue
             artifact(tasks.named('shadowJar')) { classifier = '' }
 
             pom {
