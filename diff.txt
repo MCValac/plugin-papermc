@@ -1,0 +1,131 @@
+diff --git a/build.gradle b/build.gradle
+index a795f05..48f631b 100644
+--- a/build.gradle
++++ b/build.gradle
+@@ -9,10 +9,10 @@ plugins {
+ group = project.property('project-group')
+ 
+ def artifactIdValue = project.findProperty('project-artifact-id') ?: 'mcbackpack-papermc'
+-def artifactName = project.findProperty('project-artifact-name') ?: 'MCBackpack PaperMC'
+-def artifactDescription = project.findProperty('project-artifact-description') ?: "PaperMC platform plugin for the MCBackpack ecosystem."
+-def gitOwner = project.findProperty('git-org-name') ?: 'MCValac'
+-def gitRepo = project.findProperty('git-org-repository') ?: 'plugin-plugin'
++def artifactName = project.findProperty('project-artifact-name')
++def artifactDescription = project.findProperty('project-artifact-description')
++def gitOwner = project.findProperty('git-org-name')
++def gitRepo = project.findProperty('git-org-repository')
+ def gitUrl = "https://github.com/${gitOwner}/${gitRepo}"
+ 
+ println "[${project.name}] Final Version (via Plugin): ${project.version}"
+@@ -35,8 +35,8 @@ dependencies {
+     compileOnly 'org.xerial:sqlite-jdbc:3.51.2.0'
+     compileOnly 'io.papermc.paper:paper-api:26.1.2.build.+'
+     implementation 'io.github.mcengine:mcutil:2026.0.3-2'
+-    implementation "io.github.mcvalac:mcbackpack-api:2026.0.3-1"
+-    implementation "io.github.mcvalac:mcbackpack-common:2026.0.3-1"
++    implementation "io.github.mcvalac:mcbackpack-api:2026.0.5-2"
++    implementation "io.github.mcvalac:mcbackpack-common:2026.0.5-1"
+     implementation 'io.github.mcengine:mcextension:2026.0.4-4'
+ }
+ 
+@@ -66,7 +66,6 @@ processResources {
+ publishing {
+     publications {
+         create('mavenJava', MavenPublication) {
+-            artifactId = artifactIdValue 
+             artifact(tasks.named('shadowJar')) { classifier = '' }
+ 
+             pom {
+@@ -96,8 +95,8 @@ publishing {
+             url = uri("https://maven.pkg.github.com/${gitOwner}/${gitRepo}")
+ 
+             credentials {
+-                username = System.getenv('GITHUB_ACTOR') ?: System.getenv('AGENT_NAME') ?: System.getenv('USER_GITHUB_NAME')
+-                password = System.getenv('GITHUB_TOKEN') ?: System.getenv('AGENT_TOKEN') ?: System.getenv('USER_GITHUB_TOKEN')
++                username = System.getenv('GITHUB_ACTOR') ?: System.getenv('AGENT_GITHUB_NAME') ?: System.getenv('USER_GITHUB_NAME')
++                password = System.getenv('GITHUB_TOKEN') ?: System.getenv('AGENT_GITHUB_TOKEN') ?: System.getenv('USER_GITHUB_TOKEN')
+             }
+         }
+     }
+diff --git a/gradle.properties b/gradle.properties
+index c5d3218..e2b3f08 100644
+--- a/gradle.properties
++++ b/gradle.properties
+@@ -14,7 +14,7 @@ git-org-repository=plugin-papermc
+ 
+ # --- Versioning ---
+ project-version=2026.0.5
+-project-iteration=1
++project-iteration=2
+ 
+ # Custom export path: set env var PAPERMC_PLUGIN_EXPORT to override jar output directory
+ project-custom-build-path-env=PAPERMC_PLUGIN_EXPORT
+@@ -22,5 +22,6 @@ project-custom-build-path-env=PAPERMC_PLUGIN_EXPORT
+ # --- Artifact Configuration ---
+ project-artifact-id=mcbackpack-papermc
+ project-artifact-description=PaperMC platform plugin for the MCBackpack ecosystem.
++project-artifact-name=MCBackpackPaperMC
+ project-artifact-url=https://mcvalac.github.io/plugin-website
+ plugin-name=MCBackpack
+diff --git a/settings.gradle b/settings.gradle
+index a1be8f0..ccf99bb 100644
+--- a/settings.gradle
++++ b/settings.gradle
+@@ -4,8 +4,8 @@ pluginManagement {
+             name = "GitHubPackages"
+             url = uri("https://maven.pkg.github.com/MCEngine/gradle-plugin")
+             credentials {
+-                username = System.getenv('GITHUB_ACTOR') ?: System.getenv('AGENT_NAME') ?: System.getenv('USER_GITHUB_NAME')
+-                password = System.getenv('GITHUB_TOKEN') ?: System.getenv('AGENT_TOKEN') ?: System.getenv('USER_GITHUB_TOKEN')
++                username = System.getenv('GITHUB_ACTOR') ?: System.getenv('AGENT_GITHUB_NAME') ?: System.getenv('USER_GITHUB_NAME')
++                password = System.getenv('GITHUB_TOKEN') ?: System.getenv('AGENT_GITHUB_TOKEN') ?: System.getenv('USER_GITHUB_TOKEN')
+             }
+         }
+         gradlePluginPortal()
+diff --git a/src/main/java/io/github/mcvalac/mcbackpack/papermc/MCBackpackPlugin.java b/src/main/java/io/github/mcvalac/mcbackpack/papermc/MCBackpackPlugin.java
+index 054e67f..ecce055 100644
+--- a/src/main/java/io/github/mcvalac/mcbackpack/papermc/MCBackpackPlugin.java
++++ b/src/main/java/io/github/mcvalac/mcbackpack/papermc/MCBackpackPlugin.java
+@@ -2,6 +2,7 @@ package io.github.mcvalac.mcbackpack.papermc;
+ 
+ import io.github.mcvalac.mcbackpack.api.db.IMCBackpackDB;
+ import io.github.mcvalac.mcbackpack.common.MCBackpackProvider;
++import io.github.mcvalac.mcbackpack.common.db.api.MCBackpackAPI;
+ import io.github.mcvalac.mcbackpack.common.db.mysql.MCBackpackMySQL;
+ import io.github.mcvalac.mcbackpack.common.db.sqlite.MCBackpackSQLite;
+ import io.github.mcengine.mcutil.MCUtil;
+@@ -96,6 +97,11 @@ public final class MCBackpackPlugin extends JavaPlugin {
+ 
+     private IMCBackpackDB createDatabaseFromConfig() {
+         String dbType = getConfig().getString("db.type", "sqlite");
++
++        if ("api".equalsIgnoreCase(dbType)) {
++            return new MCBackpackAPI();
++        }
++
+         if ("mysql".equalsIgnoreCase(dbType)) {
+             String host = getConfig().getString("db.mysql.host", "localhost");
+             String port = getConfig().getString("db.mysql.port", "3306");
+diff --git a/src/main/resources/config.yml b/src/main/resources/config.yml
+index 5aaaaa7..4fb95fd 100644
+--- a/src/main/resources/config.yml
++++ b/src/main/resources/config.yml
+@@ -1,5 +1,8 @@
+ db:
+-  # Connection type: 'sqlite' (local file) or 'mysql' (external database)
++  # Connection type: 
++  # 'sqlite' (local file)
++  # 'mysql'  (external database)
++  # 'api'    (remote HTTP service - requires MCSERVER_URL and MCSERVER_API_TOKEN env vars)
+   type: sqlite
+ 
+   # Settings for local SQLite database
+@@ -15,3 +18,8 @@ db:
+     user: root
+     password: mcbackpack
+     ssl: "false"
++
++  # Note for 'api' type:
++  # There are no additional yaml settings for 'api' because it reads directly from:
++  # - MCSERVER_URL
++  # - MCSERVER_API_TOKEN

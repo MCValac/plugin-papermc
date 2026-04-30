@@ -1,5 +1,8 @@
 db:
-  # Connection type: 'sqlite' (local file) or 'mysql' (external database)
+  # Connection type: 
+  # 'sqlite' (local file)
+  # 'mysql'  (external database)
+  # 'api'    (remote HTTP service - requires MCSERVER_URL and MCSERVER_API_TOKEN env vars)
   type: sqlite
 
   # Settings for local SQLite database
@@ -15,3 +18,8 @@ db:
     user: root
     password: mcbackpack
     ssl: "false"
+
+  # Note for 'api' type:
+  # There are no additional yaml settings for 'api' because it reads directly from:
+  # - MCSERVER_URL
+  # - MCSERVER_API_TOKEN

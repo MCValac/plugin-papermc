@@ -2,6 +2,7 @@ package io.github.mcvalac.mcbackpack.papermc;
 
 import io.github.mcvalac.mcbackpack.api.db.IMCBackpackDB;
 import io.github.mcvalac.mcbackpack.common.MCBackpackProvider;
+import io.github.mcvalac.mcbackpack.common.db.api.MCBackpackAPI;
 import io.github.mcvalac.mcbackpack.common.db.mysql.MCBackpackMySQL;
 import io.github.mcvalac.mcbackpack.common.db.sqlite.MCBackpackSQLite;
 import io.github.mcengine.mcutil.MCUtil;
@@ -96,6 +97,11 @@ public final class MCBackpackPlugin extends JavaPlugin {
 
     private IMCBackpackDB createDatabaseFromConfig() {
         String dbType = getConfig().getString("db.type", "sqlite");
+
+        if ("api".equalsIgnoreCase(dbType)) {
+            return new MCBackpackAPI();
+        }
+
         if ("mysql".equalsIgnoreCase(dbType)) {
             String host = getConfig().getString("db.mysql.host", "localhost");
             String port = getConfig().getString("db.mysql.port", "3306");
